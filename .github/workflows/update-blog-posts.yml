@@ -1,0 +1,87 @@
+name: Latest blog post workflow
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Runs every day at midnight
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme-with-blog:
+    name: Update profile README with latest blog posts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      # iwf.ch has no RSS/Atom — custom bridge: parse blog sitemap,
+      # fetch <title> per post, inject into profile/README.md markers.
+      # TODO: once iwf.ch ships an RSS/Atom feed, replace this step with
+      #       gautamkrishnar/blog-post-workflow@v1 (see CLAUDE.md for the
+      #       drop-in replacement snippet).
+      - name: Generate blog post list
+        env:
+          SITEMAP_URL: "https://www.iwf.ch/sitemaps-1-section-blog-1-sitemap.xml"
+          README_PATH: "profile/README.md"
+        run: node .github/scripts/update-blog-posts.ts
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # If the previous tip of main is already a blog-posts bot commit,
+      # amend it (force-push) instead of stacking another near-identical
+      # commit. Keeps main's history clean — at most one such commit at
+      # the tip between unrelated commits.
+      - name: Commit (or amend) blog post update
+        run: |
+          if [[ -z "$(git status --porcelain profile/README.md)" ]]; then
+            echo "no README changes"
+            exit 0
+          fi
+          git add profile/README.md
+
+          BOT_EMAIL=$(git config user.email)
+          PREV_EMAIL=$(git log -1 --format='%ae' HEAD)
+          BLOG_SUBJECT="chore: update latest blog posts"
+          PREV_SUBJECT=$(git log -1 --format='%s' HEAD)
+          if [[ "$PREV_EMAIL" == "$BOT_EMAIL" && "$PREV_SUBJECT" == "$BLOG_SUBJECT" ]]; then
+            echo "previous commit is already a blog-posts bot commit — amending"
+            git commit --amend --no-edit
+            git push --force-with-lease origin HEAD:main
+          else
+            echo "previous commit is unrelated — creating new commit"
+            git commit -m "$BLOG_SUBJECT"
+            git push origin HEAD:main
+          fi
+
+      # GitHub auto-disables scheduled workflows after 60 days of repo
+      # inactivity. If no commit has landed in ${KEEPALIVE_THRESHOLD_DAYS}
+      # days, push an empty commit. Replaces the `enable_keepalive` /
+      # `dummy_commit_message` feature of gautamkrishnar/blog-post-workflow
+      # (see iwf-web/.github#53-style discussion in upstream repo).
+      - name: Keepalive (prevent workflow auto-disable)
+        env:
+          KEEPALIVE_THRESHOLD_DAYS: "50"
+          KEEPALIVE_MESSAGE: "chore: keepalive"
+        run: |
+          LAST_COMMIT_EPOCH=$(git log -1 --pretty=%ct)
+          AGE_DAYS=$(( ( $(date +%s) - LAST_COMMIT_EPOCH ) / 86400 ))
+          if (( AGE_DAYS < KEEPALIVE_THRESHOLD_DAYS )); then
+            echo "last commit ${AGE_DAYS}d ago (< ${KEEPALIVE_THRESHOLD_DAYS}d threshold) — no keepalive needed"
+            exit 0
+          fi
+          echo "last commit ${AGE_DAYS}d ago — pushing keepalive commit"
+          git commit --allow-empty -m "$KEEPALIVE_MESSAGE"
+          git push
