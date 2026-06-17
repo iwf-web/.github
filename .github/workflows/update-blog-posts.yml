@@ -15,6 +15,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          # Push with GH_PAT so the authenticated pusher is in the ruleset
+          # bypass list (CI team). The default GITHUB_TOKEN pushes as
+          # github-actions[bot], which is NOT bypassed and gets rejected by
+          # the "must go through a PR" / CodeQL rules. Commit author stays
+          # github-actions[bot] (set in "Configure git") — bypass keys off
+          # the authenticated actor, not the commit author.
+          token: ${{ secrets.GH_PAT }}
 
       - name: Setup Node
         uses: actions/setup-node@v6
