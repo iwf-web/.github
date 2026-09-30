@@ -27,11 +27,11 @@ Learn more about our team: [www.iwf.ch/web-solutions/team](https://www.iwf.ch/we
 ## Latest from Our Blog
 
 <!-- BLOG-POST-LIST:START -->
+- [Das perfekte Set-up für einen Video-Podcast](https://www.iwf.ch/web-solutions/blog/video-podcast) — 2026-09-29
 - [Von Idee zu Impact - Relaunch der Website des Baselbieter Energiepakets](https://www.iwf.ch/web-solutions/blog/von-idee-zu-impact-relaunch-der-website-des-baselbieter-energiepakets) — 2026-03-11
 - [Einstieg ins Craft-Team: Mein erstes Lehrjahr](https://www.iwf.ch/web-solutions/blog/mein-erstes-lehrjahr) — 2025-10-27
 - [Micro-Moments & Mobile First Content: Erfolgreich in Sekunden](https://www.iwf.ch/web-solutions/blog/micro-moments-mobile-first) — 2025-10-23
 - [User Generated Content & Community Building](https://www.iwf.ch/web-solutions/blog/user-generated-content) — 2025-10-20
-- [Warum Individualsoftware der Schlüssel zum digitalen Erfolg ist](https://www.iwf.ch/web-solutions/blog/standard-vs-individual) — 2025-03-07
 <!-- BLOG-POST-LIST:END -->
 
 Read more on our blog: [www.iwf.ch/web-solutions/blog](https://www.iwf.ch/web-solutions/blog)
